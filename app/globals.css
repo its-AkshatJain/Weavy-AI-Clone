@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-weavy-border;
+  }
+  
+  body {
+    @apply bg-weavy-bg-primary text-weavy-text-primary font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #__next {
+    @apply w-full h-full;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar */
+  .scrollbar-custom::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    @apply bg-weavy-bg-secondary;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    @apply bg-weavy-border rounded;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
+  }
+}
+
+/* React Flow overrides */
+.react-flow__node {
+  @apply font-sans;
+}
+
+.react-flow__handle {
+  @apply w-2.5 h-2.5 bg-weavy-accent border-2 border-weavy-bg-secondary rounded-full;
+}
+
+.react-flow__handle:hover {
+  @apply bg-weavy-accent-hover scale-110;
+}
+
+.react-flow__edge-path {
+  @apply stroke-weavy-accent stroke-2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  @apply stroke-weavy-accent-hover stroke-[3px];
+}
+
+.react-flow__edge-text {
+  @apply fill-weavy-text-primary text-xs;
+}
+
+.react-flow__controls {
+  @apply bg-weavy-bg-secondary border border-weavy-border rounded-lg shadow-lg;
+}
+
+.react-flow__controls button {
+  @apply bg-weavy-bg-tertiary border-b border-weavy-border text-weavy-text-primary;
+}
+
+.react-flow__controls button:hover {
+  @apply bg-weavy-bg-primary text-weavy-accent;
+}
+
+.react-flow__controls button:last-child {
+  @apply border-b-0;
+}
+
+.react-flow__minimap {
+  @apply bg-weavy-bg-secondary border border-weavy-border rounded-lg shadow-lg;
+}
+
+.react-flow__pane {
+  @apply cursor-grab;
+}
+
+.react-flow__pane.dragging {
+  @apply cursor-grabbing;
+}
+
+.react-flow__nodesselection-rect {
+  @apply bg-weavy-accent/10 border border-weavy-accent;
+}
+
+.react-flow__connection-line {
+  @apply stroke-weavy-accent stroke-2;
+}
+

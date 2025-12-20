@@ -30,3 +30,6 @@ function TextNode({ data, selected }: NodeProps<TextNodeData>) {
 
 export default memo(TextNode)
 
+
+
+
