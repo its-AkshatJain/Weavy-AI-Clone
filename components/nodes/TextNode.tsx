@@ -3,12 +3,8 @@
 import { memo } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { Type } from 'lucide-react'
-import { useWorkflowStore } from '@/lib/store'
-
-interface TextNodeData {
-  label?: string
-  content?: string
-}
+import { useWorkflowStore } from '@/stores/workflow-store'
+import type { TextNodeData } from '@/types'
 
 function TextNode({ data, selected, id }: NodeProps<TextNodeData>) {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData)

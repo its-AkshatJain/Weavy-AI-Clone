@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Search, ChevronLeft, Type, Image as ImageIcon, Brain } from 'lucide-react'
-import { useWorkflowStore } from '@/lib/store'
+import { useWorkflowStore } from '@/stores/workflow-store'
 import { Node } from 'reactflow'
 
 interface SidebarProps {

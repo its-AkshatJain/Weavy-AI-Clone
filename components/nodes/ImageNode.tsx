@@ -3,13 +3,8 @@
 import { memo, useRef } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { Image as ImageIcon, Upload } from 'lucide-react'
-import { useWorkflowStore } from '@/lib/store'
-
-interface ImageNodeData {
-  label?: string
-  imageUrl?: string
-  imageFile?: File | null
-}
+import { useWorkflowStore } from '@/stores/workflow-store'
+import type { ImageNodeData } from '@/types'
 
 function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData)

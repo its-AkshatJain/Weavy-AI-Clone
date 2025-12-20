@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { z } from 'zod'
+import type { GeminiApiRequest } from '@/types'
 
 const requestSchema = z.object({
   model: z.string().min(1),

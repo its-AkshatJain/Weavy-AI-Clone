@@ -3,17 +3,8 @@
 import { memo, useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { Brain, Loader2, AlertCircle, Play } from 'lucide-react'
-import { useWorkflowStore } from '@/lib/store'
-
-interface LLMNodeData {
-  label?: string
-  model?: string
-  systemPrompt?: string
-  prompt?: string
-  isLoading?: boolean
-  error?: string | null
-  output?: string | null
-}
+import { useWorkflowStore } from '@/stores/workflow-store'
+import type { LLMNodeData } from '@/types'
 
 function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData)
