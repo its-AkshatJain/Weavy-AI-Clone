@@ -11,7 +11,7 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
   const { nodes, edges } = useWorkflowStore((state) => ({ nodes: state.nodes, edges: state.edges }))
   const [localPrompt, setLocalPrompt] = useState(data.prompt || '')
   const [localSystemPrompt, setLocalSystemPrompt] = useState(data.systemPrompt || '')
-  const [localModel, setLocalModel] = useState(data.model || 'gemini-pro')
+  const [localModel, setLocalModel] = useState(data.model || 'gemini-2.5-flash-lite')
 
   const handleRun = async () => {
     updateNodeData(id, { isLoading: true, error: null, output: null })
@@ -78,7 +78,7 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
 
   return (
     <div
-      className={`bg-weavy-bg-secondary border rounded-lg min-w-[280px] shadow-lg transition-all duration-200 ${
+      className={`bg-weavy-bg-secondary border rounded-lg min-w-[280px] max-w-[400px] shadow-lg transition-all duration-200 ${
         selected
           ? 'border-weavy-accent shadow-[0_0_0_2px_rgba(99,102,241,0.3)]'
           : 'border-weavy-border hover:border-weavy-accent hover:shadow-[0_4px_12px_rgba(99,102,241,0.2)]'
@@ -121,12 +121,18 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
             value={localModel}
             onChange={(e) => setLocalModel(e.target.value)}
             disabled={data.isLoading}
+            onKeyDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             className="w-full p-2 bg-weavy-bg-primary border border-weavy-border rounded text-weavy-text-primary text-xs font-sans transition-colors duration-200 focus:outline-none focus:border-weavy-accent disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <option value="gemini-pro">Gemini Pro</option>
-            <option value="gemini-pro-vision">Gemini Pro Vision</option>
-            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Free Tier - Recommended)</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="gemini-3-flash">Gemini 3 Flash Preview</option>
+            <option value="gemini-3-pro-preview">Gemini 3 Pro Preview</option>
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy)</option>
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Legacy)</option>
           </select>
         </div>
 
@@ -138,6 +144,9 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
             disabled={data.isLoading}
             placeholder="Enter system prompt..."
             rows={2}
+            onKeyDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             className="w-full p-2 bg-weavy-bg-primary border border-weavy-border rounded text-weavy-text-primary text-xs font-sans resize-y transition-colors duration-200 focus:outline-none focus:border-weavy-accent disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
@@ -150,21 +159,34 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
             disabled={data.isLoading}
             placeholder="Enter your prompt..."
             rows={4}
+            onKeyDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             className="w-full p-2 bg-weavy-bg-primary border border-weavy-border rounded text-weavy-text-primary text-xs font-sans resize-y transition-colors duration-200 focus:outline-none focus:border-weavy-accent disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
 
         {data.error && (
-          <div className="p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs flex items-start gap-2">
+          <div 
+            className="p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs flex items-start gap-2 max-h-32 overflow-y-auto scrollbar-custom"
+            onWheel={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{data.error}</span>
+            <span className="break-words">{data.error}</span>
           </div>
         )}
 
         {data.output && (
-          <div className="p-2 bg-weavy-bg-primary border border-weavy-border rounded">
+          <div 
+            className="p-2 bg-weavy-bg-primary border border-weavy-border rounded max-h-64 overflow-y-auto scrollbar-custom"
+            onWheel={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="text-xs text-weavy-text-secondary font-medium mb-1">Output:</div>
-            <div className="text-xs text-weavy-text-primary whitespace-pre-wrap">{data.output}</div>
+            <div className="text-xs text-weavy-text-primary whitespace-pre-wrap break-words">{data.output}</div>
           </div>
         )}
       </div>

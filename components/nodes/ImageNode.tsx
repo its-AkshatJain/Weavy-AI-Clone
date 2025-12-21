@@ -72,6 +72,9 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
             placeholder="Image URL..."
             value={data.imageUrl || ''}
             onChange={handleImageUrlChange}
+            onKeyDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           />
           <button
             onClick={handleUploadClick}
@@ -99,6 +102,3 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
 }
 
 export default memo(ImageNode)
-
-
-

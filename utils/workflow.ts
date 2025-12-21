@@ -23,7 +23,7 @@ export function createProductListingWorkflow(): WorkflowExport {
       position: { x: 400, y: 100 },
       data: {
         label: 'Run Any LLM Node',
-        model: 'gemini-pro-vision',
+        model: 'gemini-2.5-flash-lite',
         systemPrompt: 'You are a product analysis expert. Analyze the product image and provide detailed information.',
         prompt: 'Analyze this product image and provide: product name, key features, specifications, and target audience.',
         isLoading: false,
@@ -48,7 +48,7 @@ export function createProductListingWorkflow(): WorkflowExport {
       position: { x: 100, y: 400 },
       data: {
         label: 'Run Any LLM Node',
-        model: 'gemini-pro',
+        model: 'gemini-2.5-flash-lite',
         systemPrompt: 'You are an expert copywriter specializing in Amazon product listings.',
         prompt: 'Write a compelling Amazon product listing based on the product information provided. Include title, bullet points, and description.',
         isLoading: false,
@@ -63,7 +63,7 @@ export function createProductListingWorkflow(): WorkflowExport {
       position: { x: 400, y: 400 },
       data: {
         label: 'Run Any LLM Node',
-        model: 'gemini-pro',
+        model: 'gemini-2.5-flash-lite',
         systemPrompt: 'You are a social media marketing expert.',
         prompt: 'Write an engaging Instagram caption for this product. Make it catchy, include relevant hashtags, and encourage engagement.',
         isLoading: false,
@@ -78,7 +78,7 @@ export function createProductListingWorkflow(): WorkflowExport {
       position: { x: 700, y: 400 },
       data: {
         label: 'Run Any LLM Node',
-        model: 'gemini-pro',
+        model: 'gemini-2.5-flash-lite',
         systemPrompt: 'You are an SEO specialist.',
         prompt: 'Write an SEO-optimized meta description for this product. Keep it under 160 characters and include relevant keywords.',
         isLoading: false,

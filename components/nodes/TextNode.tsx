@@ -40,6 +40,9 @@ function TextNode({ data, selected, id }: NodeProps<TextNodeData>) {
           placeholder="Enter text..."
           value={data.content || ''}
           onChange={handleContentChange}
+          onKeyDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           rows={3}
         />
       </div>

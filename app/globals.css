@@ -11,9 +11,6 @@
     @apply bg-weavy-bg-primary text-weavy-text-primary font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
   }
 
   #__next {
@@ -99,5 +96,14 @@
 
 .react-flow__connection-line {
   @apply stroke-weavy-accent stroke-2;
+}
+
+/* React Flow Background Dots */
+.react-flow__background {
+  @apply pointer-events-none;
+}
+
+.react-flow__background-dots {
+  @apply opacity-40;
 }
 

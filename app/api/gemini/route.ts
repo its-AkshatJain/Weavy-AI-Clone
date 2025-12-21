@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 import { z } from 'zod'
 import type { GeminiApiRequest } from '@/types'
 
@@ -11,25 +11,55 @@ const requestSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  let requestedModel = 'gemini-pro' // Default for error messages
+  
   try {
     const body = await request.json()
     
     // Validate request with Zod
     const validatedData = requestSchema.parse(body)
     const { model, prompt, systemPrompt, images } = validatedData
+    requestedModel = model // Store for error messages
 
     // Get API key from environment
-    const apiKey = process.env.GEMINI_API_KEY
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'GEMINI_API_KEY is not configured' },
+        { error: 'NEXT_PUBLIC_GEMINI_API_KEY is not configured' },
         { status: 500 }
       )
     }
 
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const geminiModel = genAI.getGenerativeModel({ model })
+    // Initialize Gemini with the new API
+    const ai = new GoogleGenAI({
+      apiKey: apiKey,
+    })
+    
+    // Map model names to correct API model identifiers (2025 naming)
+    // Models need the 'models/' prefix as shown in the API response
+    const modelMap: Record<string, string> = {
+      'gemini-pro': 'models/gemini-2.5-flash',
+      'gemini-pro-vision': 'models/gemini-2.5-flash',
+      'gemini-1.5-flash': 'models/gemini-2.5-flash',
+      'gemini-1.5-pro': 'models/gemini-2.5-pro',
+      'gemini-2.5-flash': 'models/gemini-2.5-flash',
+      'gemini-2.5-pro': 'models/gemini-2.5-pro',
+      'gemini-2.5-flash-lite': 'models/gemini-2.5-flash-lite', // Best for Free Tier
+      'gemini-3-flash': 'models/gemini-3-flash-preview',
+      'gemini-3-pro-preview': 'models/gemini-3-pro-preview',
+      'gemini-lite': 'models/gemini-2.5-flash-lite',
+      // Direct model names (with models/ prefix)
+      'models/gemini-2.5-flash': 'models/gemini-2.5-flash',
+      'models/gemini-2.5-pro': 'models/gemini-2.5-pro',
+      'models/gemini-2.5-flash-lite': 'models/gemini-2.5-flash-lite',
+      'models/gemini-3-flash-preview': 'models/gemini-3-flash-preview',
+      'models/gemini-3-pro-preview': 'models/gemini-3-pro-preview',
+    }
+    
+    // If model already has 'models/' prefix, use it directly, otherwise map it
+    const actualModel = model.startsWith('models/') 
+      ? model 
+      : (modelMap[model] || 'models/gemini-2.5-flash-lite')
 
     // Build the prompt
     let fullPrompt = prompt
@@ -39,8 +69,11 @@ export async function POST(request: NextRequest) {
 
     // Handle multimodal input (text + images)
     if (images && images.length > 0) {
-      // For vision models, we need to use generateContent with parts
-      const parts: any[] = [{ text: fullPrompt }]
+      // For vision models, build contents array with parts
+      const parts: any[] = []
+      
+      // Add text part
+      parts.push({ text: fullPrompt })
       
       // Add image parts (base64 data URLs)
       for (const imageData of images) {
@@ -69,21 +102,20 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      const result = await geminiModel.generateContent({
-        contents: [{ role: 'user', parts }],
+      const response = await ai.models.generateContent({
+        model: actualModel,
+        contents: parts,
       })
 
-      const response = result.response
-      const text = response.text()
-
-      return NextResponse.json({ text })
+      return NextResponse.json({ text: response.text })
     } else {
-      // Text-only generation
-      const result = await geminiModel.generateContent(fullPrompt)
-      const response = result.response
-      const text = response.text()
+      // Text-only generation - contents is just a string
+      const response = await ai.models.generateContent({
+        model: actualModel,
+        contents: fullPrompt,
+      })
 
-      return NextResponse.json({ text })
+      return NextResponse.json({ text: response.text })
     }
   } catch (error) {
     console.error('Gemini API error:', error)
@@ -96,14 +128,26 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof Error) {
+      // Extract user-friendly error message
+      let errorMessage = error.message
+      
+      // Handle specific Gemini API errors
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        errorMessage = `Model "${requestedModel}" is not available. Please check your API key has access to Gemini models. Try using a different model or verify your API key.`
+      } else if (errorMessage.includes('API key') || errorMessage.includes('API_KEY')) {
+        errorMessage = 'Invalid API key. Please check your NEXT_PUBLIC_GEMINI_API_KEY in .env.local'
+      } else if (errorMessage.includes('quota') || errorMessage.includes('rate limit')) {
+        errorMessage = 'API quota exceeded. Please try again later or check your usage limits.'
+      }
+      
       return NextResponse.json(
-        { error: error.message || 'Failed to generate content' },
+        { error: errorMessage },
         { status: 500 }
       )
     }
 
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     )
   }

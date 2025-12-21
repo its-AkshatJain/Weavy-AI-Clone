@@ -45,7 +45,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       case 'llm':
         baseNode.data = {
           label: 'Run Any LLM Node',
-          model: 'gemini-2.5-flash-lite',
+          model: 'gemini-pro',
           systemPrompt: '',
           prompt: '',
           isLoading: false,

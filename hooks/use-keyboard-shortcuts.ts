@@ -9,8 +9,19 @@ export function useKeyboardShortcuts() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Delete or Backspace to remove selected nodes/edges
+      // Ignore if user is typing in an input, textarea, or contenteditable
+      const target = event.target as HTMLElement
+      const isTyping = 
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.closest('input') ||
+        target.closest('textarea') ||
+        target.closest('[contenteditable="true"]')
+      
+      // Delete or Backspace to remove selected nodes/edges (only if not typing)
       if (
+        !isTyping &&
         (event.key === 'Delete' || event.key === 'Backspace') &&
         !event.metaKey &&
         !event.ctrlKey
