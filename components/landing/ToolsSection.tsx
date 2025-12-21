@@ -22,7 +22,7 @@ export default function ToolsSection({ isVisible }: ToolsSectionProps) {
   ]
 
   return (
-    <section className="py-32 px-8 bg-[#f5f5f5] relative">
+    <section className="py-16 md:py-24 lg:py-32 px-4 md:px-8 bg-[#f5f5f5] relative">
       {/* Grid pattern overlay */}
       <div
         className="absolute inset-0 opacity-30"
@@ -36,19 +36,19 @@ export default function ToolsSection({ isVisible }: ToolsSectionProps) {
       />
 
       <div className="relative z-10 max-w-[1920px] mx-auto">
-        <div className="text-center mb-20">
-          <h2 className="text-6xl md:text-7xl font-bold mb-6 text-black leading-tight font-display">
+        <div className="text-center mb-12 md:mb-16 lg:mb-20">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 md:mb-6 text-black leading-tight font-display px-4">
             With all the professional tools
             <br />
             you rely on
           </h2>
-          <p className="text-xl text-black/70 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-black/70 max-w-3xl mx-auto leading-relaxed px-4">
             In one seamless workflow
           </p>
         </div>
 
         {/* Central Image with Tools Around */}
-        <div className="relative max-w-5xl h-[500px] mx-auto">
+        <div className="relative max-w-5xl h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] mx-auto">
           <div className="relative w-full h-full max-w-7xl mx-auto pt-0">
             <Image
               src="/images/landing/68223c9e9705b88c35e76dec_Default@2x.avif"
@@ -69,7 +69,7 @@ export default function ToolsSection({ isVisible }: ToolsSectionProps) {
           {tools.map((tool, index) => (
             <div
               key={index}
-              className={`absolute group cursor-pointer transition-all duration-700 ${
+              className={`absolute group cursor-pointer transition-all duration-700 hidden sm:block ${
                 isVisible
                   ? 'opacity-100 translate-x-0 translate-y-0'
                   : `opacity-0 ${tool.position === 'left' ? '-translate-x-10' : 'translate-x-10'}`
@@ -81,8 +81,8 @@ export default function ToolsSection({ isVisible }: ToolsSectionProps) {
                 transitionDelay: `${index * 0.1}s`,
               }}
             >
-              <div className="px-4 py-2 bg-white border border-black/10 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 hover:scale-110 hover:border-[#FFD700]">
-                <span className="text-sm font-medium text-black group-hover:text-[#FFD700] transition-colors">
+              <div className="px-3 py-1.5 md:px-4 md:py-2 bg-white border border-black/10 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 hover:scale-110 hover:border-[#FFD700]">
+                <span className="text-xs md:text-sm font-medium text-black group-hover:text-[#FFD700] transition-colors">
                   {tool.name}
                 </span>
               </div>

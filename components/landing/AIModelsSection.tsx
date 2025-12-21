@@ -146,15 +146,15 @@ export default function AIModelsSection({ isVisible }: AIModelsSectionProps) {
         </div>
 
         {/* TEXT CONTENT */}
-        <div className="relative z-10 h-full w-full flex items-start">
-          <div className="max-w-7xl mx-auto px-8 w-full pt-16 pb-16">
-            <div className="flex gap-16 items-start">
+        <div className="relative z-10 h-full w-full flex items-start overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 w-full pt-8 sm:pt-12 md:pt-16 pb-8 sm:pb-12 md:pb-16">
+            <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 md:gap-12 lg:gap-16 items-start h-full">
               {/* LEFT SIDE - FIXED */}
-              <div className="flex-shrink-0 max-w-2xl">
-                <h2 className="text-6xl md:text-8xl font-bold mb-8 text-white leading-[1.05] font-display">
+              <div className="flex-shrink-0 w-full lg:max-w-2xl">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-bold mb-4 sm:mb-6 md:mb-8 text-white leading-[1.05] font-display">
                   Use all AI models, together at last
                 </h2>
-                <p className="text-xl md:text-2xl font-bold text-white leading-[1.3]">
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white leading-[1.3]">
                   AI models and professional editing tools in one node-based platform. Turn creative vision into scalable workflows without compromising quality.
                 </p>
               </div>
@@ -162,14 +162,14 @@ export default function AIModelsSection({ isVisible }: AIModelsSectionProps) {
               {/* RIGHT SIDE - SCROLLABLE */}
               <motion.div
                 style={{ y: textY }}
-                className="flex-1 will-change-transform"
+                className="flex-1 w-full lg:w-auto will-change-transform hidden md:block"
                 suppressHydrationWarning
               >
-                <div className="text-4xl md:text-5xl font-bold leading-[1.05]">
+                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.05]">
                   {modelNames.map((model, index) => (
                     <motion.div
                       key={index}
-                      className="mb-8 last:mb-0"
+                      className="mb-4 sm:mb-6 md:mb-8 last:mb-0"
                       style={{ color: modelColors[index] }}
                       suppressHydrationWarning
                     >
@@ -178,6 +178,20 @@ export default function AIModelsSection({ isVisible }: AIModelsSectionProps) {
                   ))}
                 </div>
               </motion.div>
+
+              {/* MOBILE: Show models in a compact grid */}
+              <div className="md:hidden w-full mt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                  {modelNames.map((model, index) => (
+                    <div
+                      key={index}
+                      className="text-lg sm:text-xl font-bold text-white/80 leading-tight"
+                    >
+                      {model}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -119,34 +119,55 @@ export default function MovableNodes({ isVisible }: MovableNodesProps) {
   useEffect(() => {
     if (!dragState || !containerRef.current) return
 
+    let animationFrameId: number | null = null
+    let lastUpdateTime = 0
+    const throttleMs = 0 // No throttling - update every frame for smooth movement
+
     const handleMouseMove = (e: MouseEvent) => {
       e.preventDefault()
-      const container = containerRef.current!
-      const containerRect = container.getBoundingClientRect()
-      setNodePositions((prev) =>
-        prev.map((pos, i) => {
-          const nodeWidth = nodes[i]?.width || 200
-          const nodeHeight = nodes[i]?.height || 200
-          return i === dragState.index
-            ? {
-                ...pos,
-                x: Math.max(0, Math.min(e.clientX - containerRect.left - dragState.offsetX, container.offsetWidth - nodeWidth)),
-                y: Math.max(0, Math.min(e.clientY - containerRect.top - dragState.offsetY, container.offsetHeight - nodeHeight)),
-              }
-            : pos
-        })
-      )
+      
+      const now = performance.now()
+      if (now - lastUpdateTime < throttleMs) return
+      lastUpdateTime = now
+
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+
+      animationFrameId = requestAnimationFrame(() => {
+        const container = containerRef.current!
+        const containerRect = container.getBoundingClientRect()
+        setNodePositions((prev) =>
+          prev.map((pos, i) => {
+            const nodeWidth = nodes[i]?.width || 200
+            const nodeHeight = nodes[i]?.height || 200
+            return i === dragState.index
+              ? {
+                  ...pos,
+                  x: Math.max(0, Math.min(e.clientX - containerRect.left - dragState.offsetX, container.offsetWidth - nodeWidth)),
+                  y: Math.max(0, Math.min(e.clientY - containerRect.top - dragState.offsetY, container.offsetHeight - nodeHeight)),
+                }
+              : pos
+          })
+        )
+      })
     }
 
     const handleMouseUp = () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
       setDragState(null)
       setNodePositions((prev) => prev.map((pos) => ({ ...pos, isDragging: false })))
     }
 
-    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mousemove', handleMouseMove, { passive: false })
     window.addEventListener('mouseup', handleMouseUp)
 
     return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
@@ -173,6 +194,9 @@ export default function MovableNodes({ isVisible }: MovableNodesProps) {
           const nextNodeWidth = nodes[nextIndex].width || 200
           const nextNodeHeight = nodes[nextIndex].height || 200
           
+          // Check if any node in this connection is being dragged
+          const isDragging = pos.isDragging || nextPos.isDragging
+          
           // Calculate connection points at the center-right of current node and center-left of next node
           const startX = pos.x + nodeWidth
           const startY = pos.y + nodeHeight / 2
@@ -188,7 +212,9 @@ export default function MovableNodes({ isVisible }: MovableNodesProps) {
               y2={endY}
               stroke="#d1d5db"
               strokeWidth="2"
-              className="transition-all duration-300"
+              style={{
+                transition: isDragging ? 'none' : 'all 0.15s ease-out',
+              }}
             />
           )
         })}
@@ -209,7 +235,9 @@ export default function MovableNodes({ isVisible }: MovableNodesProps) {
                   fill="#9ca3af"
                   stroke="#ffffff"
                   strokeWidth="1.5"
-                  className="transition-all duration-300"
+                  style={{
+                    transition: pos.isDragging ? 'none' : 'all 0.15s ease-out',
+                  }}
                 />
               )}
               {/* Dot on left side (input) - except for first node */}
@@ -221,7 +249,9 @@ export default function MovableNodes({ isVisible }: MovableNodesProps) {
                   fill="#9ca3af"
                   stroke="#ffffff"
                   strokeWidth="1.5"
-                  className="transition-all duration-300"
+                  style={{
+                    transition: pos.isDragging ? 'none' : 'all 0.15s ease-out',
+                  }}
                 />
               )}
             </g>
@@ -233,7 +263,7 @@ export default function MovableNodes({ isVisible }: MovableNodesProps) {
       {nodes.map((node, index) => (
         <div
           key={index}
-          className={`absolute rounded-lg shadow-xl cursor-move transition-all duration-300 select-none overflow-hidden ${
+          className={`absolute rounded-lg shadow-xl cursor-move select-none overflow-hidden ${
             nodePositions[index].isDragging ? 'scale-105 shadow-2xl z-50' : 'z-10'
           }`}
           style={{
@@ -242,7 +272,13 @@ export default function MovableNodes({ isVisible }: MovableNodesProps) {
             width: `${node.width}px`,
             height: `${node.height}px`,
             borderRadius: '8px',
-            transform: nodePositions[index].isDragging ? 'scale(1.05)' : 'scale(1)',
+            transform: nodePositions[index].isDragging 
+              ? 'scale(1.05) translateZ(0)' 
+              : 'scale(1) translateZ(0)',
+            transition: nodePositions[index].isDragging 
+              ? 'transform 0.1s ease-out, box-shadow 0.1s ease-out' 
+              : 'left 0.15s ease-out, top 0.15s ease-out, transform 0.15s ease-out, box-shadow 0.15s ease-out',
+            willChange: nodePositions[index].isDragging ? 'transform, left, top' : 'auto',
           }}
           onMouseDown={(e) => handleMouseDown(index, e)}
         >
