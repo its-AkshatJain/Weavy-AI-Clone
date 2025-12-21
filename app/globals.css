@@ -8,7 +8,7 @@
   }
   
   body {
-    @apply bg-weavy-bg-primary text-weavy-text-primary font-sans;
+    @apply text-weavy-text-primary font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
