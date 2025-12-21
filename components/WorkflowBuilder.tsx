@@ -5,6 +5,7 @@ import Sidebar from './Sidebar'
 import WorkflowCanvas from './WorkflowCanvas'
 import SaveWorkflowModal from './modals/SaveWorkflowModal'
 import LoadWorkflowModal from './modals/LoadWorkflowModal'
+import ConfirmModal from './modals/ConfirmModal'
 import { ToastContainer, Toast, ToastType } from './Toast'
 import { useWorkflowStore } from '@/stores/workflow-store'
 import { Save, Download, Upload, Undo2, Redo2, Trash2, FolderOpen } from 'lucide-react'
@@ -14,6 +15,12 @@ export default function WorkflowBuilder() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [saveModalOpen, setSaveModalOpen] = useState(false)
   const [loadModalOpen, setLoadModalOpen] = useState(false)
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
+  const [confirmVariant, setConfirmVariant] = useState<'danger' | 'warning' | 'info'>('warning')
+  const [currentWorkflowName, setCurrentWorkflowName] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -39,6 +46,7 @@ export default function WorkflowBuilder() {
       if (!hasVisited && isWorkflowPage) {
         const prebuiltWorkflow = createProductListingWorkflow()
         loadWorkflow(prebuiltWorkflow.nodes, prebuiltWorkflow.edges)
+        setCurrentWorkflowName(null) // Prebuilt workflow doesn't have a saved name
         sessionStorage.setItem('weavy-workflow-visited', 'true')
       }
     }
@@ -71,6 +79,7 @@ export default function WorkflowBuilder() {
       })
 
       if (response.ok) {
+        setCurrentWorkflowName(name)
         showToast('Workflow saved successfully!', 'success')
         setSaveModalOpen(false)
       } else {
@@ -102,6 +111,7 @@ export default function WorkflowBuilder() {
         }
         
         importWorkflow({ nodes: data.nodes, edges: data.edges })
+        setCurrentWorkflowName(data.name)
         showToast(`Workflow "${data.name}" loaded successfully!`, 'success')
         setLoadModalOpen(false)
       } else {
@@ -131,6 +141,10 @@ export default function WorkflowBuilder() {
 
       if (response.ok) {
         showToast('Workflow deleted successfully', 'success')
+        // Clear workflow name if the deleted workflow was currently loaded
+        if (currentWorkflowName) {
+          setCurrentWorkflowName(null)
+        }
       } else {
         const errorData = await response.json()
         console.error('Failed to delete workflow:', errorData)
@@ -158,6 +172,7 @@ export default function WorkflowBuilder() {
         try {
           const workflow = await importWorkflowFromFile(file)
           importWorkflow(workflow)
+          setCurrentWorkflowName(null) // Imported workflows don't have a name
           showToast('Workflow imported successfully!', 'success')
         } catch (error) {
           console.error('Error importing workflow:', error)
@@ -168,11 +183,38 @@ export default function WorkflowBuilder() {
     input.click()
   }
 
-  const handleClear = () => {
-    if (confirm('Are you sure you want to clear the workflow?')) {
-      reset()
-      showToast('Workflow cleared', 'info')
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    variant: 'danger' | 'warning' | 'info' = 'warning'
+  ) => {
+    setConfirmTitle(title)
+    setConfirmMessage(message)
+    setConfirmAction(() => onConfirm)
+    setConfirmVariant(variant)
+    setConfirmModalOpen(true)
+  }
+
+  const handleConfirm = () => {
+    if (confirmAction) {
+      confirmAction()
+      setConfirmAction(null)
     }
+    setConfirmModalOpen(false)
+  }
+
+  const handleClear = () => {
+    showConfirm(
+      'Clear Workflow',
+      'Are you sure you want to clear the current workflow? This action cannot be undone.',
+      () => {
+        reset()
+        setCurrentWorkflowName(null)
+        showToast('Workflow cleared', 'info')
+      },
+      'danger'
+    )
   }
 
   return (
@@ -183,7 +225,19 @@ export default function WorkflowBuilder() {
         <div className="flex-1 flex flex-col h-screen">
           {/* Toolbar */}
           <div className="h-12 bg-weavy-bg-secondary border-b border-weavy-border flex items-center justify-between px-4 z-20">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              {currentWorkflowName && (
+                <>
+                  <div className="px-3 py-1.5 bg-weavy-bg-tertiary border border-weavy-border rounded-md flex items-center gap-2">
+                    <span className="text-xs text-weavy-text-secondary font-medium">Workflow:</span>
+                    <span className="text-sm font-semibold text-weavy-text-primary truncate max-w-[200px]">
+                      {currentWorkflowName}
+                    </span>
+                  </div>
+                  <div className="w-px h-6 bg-weavy-border" />
+                </>
+              )}
+              <div className="flex items-center gap-2">
               <button
                 onClick={undo}
                 disabled={!canUndo()}
@@ -231,6 +285,7 @@ export default function WorkflowBuilder() {
               >
                 <Upload className="w-4 h-4" />
               </button>
+              </div>
             </div>
             <button
               onClick={handleClear}
@@ -259,6 +314,19 @@ export default function WorkflowBuilder() {
         onLoad={handleLoad}
         onDelete={handleDelete}
         isLoading={isLoading}
+        onShowConfirm={showConfirm}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        onConfirm={handleConfirm}
+        title={confirmTitle}
+        message={confirmMessage}
+        variant={confirmVariant}
+        confirmText="Confirm"
+        cancelText="Cancel"
       />
 
       {/* Toast Notifications */}

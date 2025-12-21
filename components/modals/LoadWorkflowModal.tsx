@@ -16,6 +16,7 @@ interface LoadWorkflowModalProps {
   onLoad: (workflowId: string) => Promise<void>
   onDelete?: (workflowId: string) => Promise<void>
   isLoading?: boolean
+  onShowConfirm?: (title: string, message: string, onConfirm: () => void, variant?: 'danger' | 'warning' | 'info') => void
 }
 
 export default function LoadWorkflowModal({
@@ -24,6 +25,7 @@ export default function LoadWorkflowModal({
   onLoad,
   onDelete,
   isLoading = false,
+  onShowConfirm,
 }: LoadWorkflowModalProps) {
   const [workflows, setWorkflows] = useState<Workflow[]>([])
   const [loading, setLoading] = useState(false)
@@ -72,29 +74,70 @@ export default function LoadWorkflowModal({
 
   const handleDelete = async (e: React.MouseEvent, workflowId: string) => {
     e.stopPropagation()
-    if (!confirm('Are you sure you want to delete this workflow?')) {
-      return
-    }
-
-    setDeletingId(workflowId)
     
-    try {
-      const response = await fetch(`/api/workflows/${workflowId}`, {
-        method: 'DELETE',
-      })
+    const workflow = workflows.find((w) => w.id === workflowId)
+    const workflowName = workflow?.name || 'this workflow'
+    
+    if (onShowConfirm) {
+      onShowConfirm(
+        'Delete Workflow',
+        `Are you sure you want to delete "${workflowName}"? This action cannot be undone.`,
+        async () => {
+          setDeletingId(workflowId)
+          
+          try {
+            const response = await fetch(`/api/workflows/${workflowId}`, {
+              method: 'DELETE',
+            })
 
-      if (response.ok) {
-        setWorkflows(workflows.filter((w) => w.id !== workflowId))
-      } else {
-        const errorData = await response.json()
-        console.error('Failed to delete workflow:', errorData)
-        setError(errorData.error || 'Failed to delete workflow')
+            if (response.ok) {
+              setWorkflows(workflows.filter((w) => w.id !== workflowId))
+              if (onDelete) {
+                await onDelete(workflowId)
+              }
+            } else {
+              const errorData = await response.json()
+              console.error('Failed to delete workflow:', errorData)
+              setError(errorData.error || 'Failed to delete workflow')
+            }
+          } catch (error) {
+            console.error('Error deleting workflow:', error)
+            setError(error instanceof Error ? error.message : 'Failed to delete workflow')
+          } finally {
+            setDeletingId(null)
+          }
+        },
+        'danger'
+      )
+    } else {
+      // Fallback to confirm if onShowConfirm is not provided
+      if (!confirm(`Are you sure you want to delete "${workflowName}"?`)) {
+        return
       }
-    } catch (error) {
-      console.error('Error deleting workflow:', error)
-      setError(error instanceof Error ? error.message : 'Failed to delete workflow')
-    } finally {
-      setDeletingId(null)
+
+      setDeletingId(workflowId)
+      
+      try {
+        const response = await fetch(`/api/workflows/${workflowId}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          setWorkflows(workflows.filter((w) => w.id !== workflowId))
+          if (onDelete) {
+            await onDelete(workflowId)
+          }
+        } else {
+          const errorData = await response.json()
+          console.error('Failed to delete workflow:', errorData)
+          setError(errorData.error || 'Failed to delete workflow')
+        }
+      } catch (error) {
+        console.error('Error deleting workflow:', error)
+        setError(error instanceof Error ? error.message : 'Failed to delete workflow')
+      } finally {
+        setDeletingId(null)
+      }
     }
   }
 
