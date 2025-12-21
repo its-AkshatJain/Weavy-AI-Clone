@@ -25,19 +25,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: [
-          '-apple-system',
-          'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
-          'Oxygen',
-          'Ubuntu',
-          'Cantarell',
-          'Fira Sans',
-          'Droid Sans',
-          'Helvetica Neue',
-          'sans-serif',
-        ],
+        sans: ['var(--font-dm-sans)', 'Arial', 'sans-serif'],
+        display: ['var(--font-space-grotesk)', 'sans-serif'],
       },
       spacing: {
         'sidebar': '280px',

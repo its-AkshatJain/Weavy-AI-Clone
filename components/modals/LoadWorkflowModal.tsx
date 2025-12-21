@@ -112,31 +112,31 @@ export default function LoadWorkflowModal({
     } else {
       // Fallback to confirm if onShowConfirm is not provided
       if (!confirm(`Are you sure you want to delete "${workflowName}"?`)) {
-        return
-      }
+      return
+    }
 
-      setDeletingId(workflowId)
+    setDeletingId(workflowId)
       
-      try {
-        const response = await fetch(`/api/workflows/${workflowId}`, {
-          method: 'DELETE',
-        })
+    try {
+      const response = await fetch(`/api/workflows/${workflowId}`, {
+        method: 'DELETE',
+      })
 
-        if (response.ok) {
-          setWorkflows(workflows.filter((w) => w.id !== workflowId))
+      if (response.ok) {
+        setWorkflows(workflows.filter((w) => w.id !== workflowId))
           if (onDelete) {
             await onDelete(workflowId)
           }
-        } else {
+      } else {
           const errorData = await response.json()
           console.error('Failed to delete workflow:', errorData)
           setError(errorData.error || 'Failed to delete workflow')
-        }
-      } catch (error) {
-        console.error('Error deleting workflow:', error)
+      }
+    } catch (error) {
+      console.error('Error deleting workflow:', error)
         setError(error instanceof Error ? error.message : 'Failed to delete workflow')
-      } finally {
-        setDeletingId(null)
+    } finally {
+      setDeletingId(null)
       }
     }
   }
@@ -158,13 +158,13 @@ export default function LoadWorkflowModal({
             >
               <RefreshCw className={`w-4 h-4 text-weavy-text-secondary ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <button
-              onClick={onClose}
-              disabled={isLoading}
-              className="p-1 hover:bg-weavy-bg-primary rounded transition-colors disabled:opacity-50"
-            >
-              <X className="w-5 h-5 text-weavy-text-secondary" />
-            </button>
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="p-1 hover:bg-weavy-bg-primary rounded transition-colors disabled:opacity-50"
+          >
+            <X className="w-5 h-5 text-weavy-text-secondary" />
+          </button>
           </div>
         </div>
 

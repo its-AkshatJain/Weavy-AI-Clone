@@ -30,7 +30,9 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
     fileInputRef.current?.click()
   }
 
-  const imageSrc = data.imageUrl || (data.imageFile ? URL.createObjectURL(data.imageFile) : null)
+  // Default to bird/man image if no image is provided
+  const defaultImage = '/images/landing/6837510acbe777269734b387_bird_desktop.avif'
+  const imageSrc = data.imageUrl || (data.imageFile ? URL.createObjectURL(data.imageFile) : defaultImage)
 
   return (
     <div
@@ -55,14 +57,12 @@ function ImageNode({ data, selected, id }: NodeProps<ImageNodeData>) {
       </div>
       <div className="p-3 space-y-3">
         <div className="w-full min-h-[120px] bg-weavy-bg-primary border border-weavy-border rounded overflow-hidden flex items-center justify-center">
-          {imageSrc ? (
+          {imageSrc && (
             <img
               src={imageSrc}
               alt="Preview"
               className="w-full h-auto max-h-[200px] object-contain"
             />
-          ) : (
-            <div className="text-weavy-text-secondary text-xs">No image</div>
           )}
         </div>
         <div className="flex gap-2">
