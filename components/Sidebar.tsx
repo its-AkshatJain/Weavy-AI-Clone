@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, ChevronLeft, Type, Image as ImageIcon, Brain } from 'lucide-react'
+import { ChevronLeft, Type, Image as ImageIcon, Brain } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflow-store'
 import { Node } from 'reactflow'
 
@@ -11,7 +11,6 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
-  const [searchQuery, setSearchQuery] = useState('')
   const [draggedNodeType, setDraggedNodeType] = useState<'text' | 'image' | 'llm' | null>(null)
   const addNode = useWorkflowStore((state) => state.addNode)
 
@@ -72,7 +71,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <div
       className={`bg-weavy-bg-secondary border-r border-weavy-border flex flex-col h-screen transition-all duration-300 relative z-10 ${
         collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
-      }`}
+      } md:relative`}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b border-weavy-border min-h-[60px]">
@@ -91,20 +90,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {!collapsed && (
         <>
-          {/* Search */}
-          <div className="p-4 border-b border-weavy-border">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-weavy-text-secondary" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 bg-weavy-bg-primary border border-weavy-border rounded-md text-weavy-text-primary text-sm transition-all duration-200 focus:outline-none focus:border-weavy-accent focus:ring-2 focus:ring-weavy-accent/20 placeholder:text-weavy-text-secondary"
-              />
-            </div>
-          </div>
-
           {/* Quick Access */}
           <div className="p-4 flex-1 overflow-y-auto scrollbar-custom">
             <h3 className="text-xs font-semibold text-weavy-text-secondary uppercase tracking-wider mb-3">

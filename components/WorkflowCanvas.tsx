@@ -148,10 +148,12 @@ export default function WorkflowCanvas({ sidebarCollapsed }: WorkflowCanvasProps
           showInteractive={false}
         />
         <MiniMap
-          className="react-flow-minimap"
+          className="react-flow-minimap hidden sm:block"
           nodeColor="#6366f1"
           maskColor="rgba(0, 0, 0, 0.5)"
           position="bottom-right"
+          pannable
+          zoomable
         />
       </ReactFlow>
     </div>

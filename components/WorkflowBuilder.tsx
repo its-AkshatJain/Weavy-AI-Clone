@@ -8,7 +8,7 @@ import LoadWorkflowModal from './modals/LoadWorkflowModal'
 import ConfirmModal from './modals/ConfirmModal'
 import { ToastContainer, Toast, ToastType } from './Toast'
 import { useWorkflowStore } from '@/stores/workflow-store'
-import { Save, Download, Upload, Undo2, Redo2, Trash2, FolderOpen } from 'lucide-react'
+import { Save, Download, Upload, Undo2, Redo2, Trash2, FolderOpen, Menu } from 'lucide-react'
 import { createProductListingWorkflow, exportWorkflowToFile, importWorkflowFromFile } from '@/utils/workflow'
 
 export default function WorkflowBuilder() {
@@ -51,6 +51,16 @@ export default function WorkflowBuilder() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Ensure sidebar starts collapsed on mobile
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768 // md breakpoint
+      if (isMobile) {
+        setSidebarCollapsed(true)
+      }
+    }
   }, [])
 
   const showToast = (message: string, type: ToastType = 'info') => {
@@ -220,80 +230,106 @@ export default function WorkflowBuilder() {
   return (
     <>
       <div className="flex w-full h-screen overflow-hidden bg-weavy-bg-primary" style={{ height: '100vh', overflow: 'hidden' }}>
-        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        </div>
         
-        <div className="flex-1 flex flex-col h-screen">
+        {/* Mobile sidebar overlay */}
+        {!sidebarCollapsed && (
+          <div className="md:hidden fixed inset-0 z-30">
+            <div 
+              className="absolute inset-0 bg-black/50 transition-opacity duration-300" 
+              onClick={() => setSidebarCollapsed(true)} 
+            />
+            <div className="absolute left-0 top-0 bottom-0 w-[280px] z-40 shadow-2xl">
+              <Sidebar collapsed={false} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+            </div>
+          </div>
+        )}
+        
+        <div className="flex-1 flex flex-col h-screen min-w-0">
           {/* Toolbar */}
-          <div className="h-12 bg-weavy-bg-secondary border-b border-weavy-border flex items-center justify-between px-4 z-20">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="h-auto md:h-12 bg-weavy-bg-secondary border-b border-weavy-border flex flex-row items-center justify-between px-2 md:px-4 py-2 md:py-0 z-20">
+            <div className="flex items-center gap-1.5 md:gap-4 flex-1 min-w-0 overflow-x-auto scrollbar-none">
               {currentWorkflowName && (
                 <>
-                  <div className="px-3 py-1.5 bg-weavy-bg-tertiary border border-weavy-border rounded-md flex items-center gap-2">
-                    <span className="text-xs text-weavy-text-secondary font-medium">Workflow:</span>
-                    <span className="text-sm font-semibold text-weavy-text-primary truncate max-w-[200px]">
+                  <div className="px-2 md:px-3 py-1.5 bg-weavy-bg-tertiary border border-weavy-border rounded-md flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-weavy-text-secondary font-medium hidden sm:inline">Workflow:</span>
+                    <span className="text-xs md:text-sm font-semibold text-weavy-text-primary truncate max-w-[100px] sm:max-w-[200px]">
                       {currentWorkflowName}
                     </span>
                   </div>
-                  <div className="w-px h-6 bg-weavy-border" />
+                  <div className="w-px h-4 md:h-6 bg-weavy-border hidden sm:block flex-shrink-0" />
                 </>
               )}
-              <div className="flex items-center gap-2">
-              <button
-                onClick={undo}
-                disabled={!canUndo()}
-                className="p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                title="Undo (Ctrl+Z)"
-              >
-                <Undo2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={redo}
-                disabled={!canRedo()}
-                className="p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                title="Redo (Ctrl+Y)"
-              >
-                <Redo2 className="w-4 h-4" />
-              </button>
-              <div className="w-px h-6 bg-weavy-border mx-2" />
-              <button
-                onClick={() => setSaveModalOpen(true)}
-                className="px-3 py-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200 flex items-center gap-2"
-                title="Save workflow"
-              >
-                <Save className="w-4 h-4" />
-                <span className="text-xs font-medium">Save</span>
-              </button>
-              <button
-                onClick={() => setLoadModalOpen(true)}
-                className="px-3 py-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200 flex items-center gap-2"
-                title="Load workflow"
-              >
-                <FolderOpen className="w-4 h-4" />
-                <span className="text-xs font-medium">Load</span>
-              </button>
-              <button
-                onClick={handleExport}
-                className="p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200"
-                title="Export workflow"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleImport}
-                className="p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200"
-                title="Import workflow"
-              >
-                <Upload className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                <button
+                  onClick={undo}
+                  disabled={!canUndo()}
+                  className="p-1.5 md:p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex-shrink-0"
+                  title="Undo (Ctrl+Z)"
+                >
+                  <Undo2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={!canRedo()}
+                  className="p-1.5 md:p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex-shrink-0"
+                  title="Redo (Ctrl+Y)"
+                >
+                  <Redo2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </button>
+                <div className="w-px h-4 md:h-6 bg-weavy-border mx-0.5 md:mx-2 flex-shrink-0" />
+                <button
+                  onClick={() => setSaveModalOpen(true)}
+                  className="px-2 md:px-3 py-1.5 md:py-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200 flex items-center gap-1.5 md:gap-2 flex-shrink-0"
+                  title="Save workflow"
+                >
+                  <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Save</span>
+                </button>
+                <button
+                  onClick={() => setLoadModalOpen(true)}
+                  className="px-2 md:px-3 py-1.5 md:py-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200 flex items-center gap-1.5 md:gap-2 flex-shrink-0"
+                  title="Load workflow"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Load</span>
+                </button>
+                <button
+                  onClick={handleExport}
+                  className="p-1.5 md:p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200 flex-shrink-0"
+                  title="Export workflow"
+                >
+                  <Download className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </button>
+                <button
+                  onClick={handleImport}
+                  className="p-1.5 md:p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200 flex-shrink-0"
+                  title="Import workflow"
+                >
+                  <Upload className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </button>
               </div>
             </div>
-            <button
-              onClick={handleClear}
-              className="p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-red-500/20 hover:border-red-500/50 transition-colors duration-200"
-              title="Clear workflow"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+              {/* Mobile sidebar toggle button */}
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="md:hidden p-1.5 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200"
+                title="Toggle sidebar"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleClear}
+                className="p-1.5 md:p-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-red-500/20 hover:border-red-500/50 transition-colors duration-200 flex-shrink-0"
+                title="Clear workflow"
+              >
+                <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Canvas */}
