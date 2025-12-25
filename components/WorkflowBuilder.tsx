@@ -8,7 +8,7 @@ import LoadWorkflowModal from './modals/LoadWorkflowModal'
 import ConfirmModal from './modals/ConfirmModal'
 import { ToastContainer, Toast, ToastType } from './Toast'
 import { useWorkflowStore } from '@/stores/workflow-store'
-import { Save, Download, Upload, Undo2, Redo2, Trash2, FolderOpen, Menu } from 'lucide-react'
+import { Save, Download, Upload, Undo2, Redo2, Trash2, FolderOpen, Menu, FilePlus } from 'lucide-react'
 import { createProductListingWorkflow, exportWorkflowToFile, importWorkflowFromFile } from '@/utils/workflow'
 
 export default function WorkflowBuilder() {
@@ -21,6 +21,7 @@ export default function WorkflowBuilder() {
   const [confirmMessage, setConfirmMessage] = useState('')
   const [confirmVariant, setConfirmVariant] = useState<'danger' | 'warning' | 'info'>('warning')
   const [currentWorkflowName, setCurrentWorkflowName] = useState<string | null>(null)
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -78,8 +79,14 @@ export default function WorkflowBuilder() {
     try {
       const workflow = exportWorkflow()
 
-      const response = await fetch('/api/workflows', {
-        method: 'POST',
+      // If we have a current workflow ID, update it; otherwise create new
+      const url = currentWorkflowId 
+        ? `/api/workflows/${currentWorkflowId}`
+        : '/api/workflows'
+      const method = currentWorkflowId ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
@@ -89,8 +96,15 @@ export default function WorkflowBuilder() {
       })
 
       if (response.ok) {
+        const data = await response.json()
         setCurrentWorkflowName(name)
-        showToast('Workflow saved successfully!', 'success')
+        setCurrentWorkflowId(data.id || currentWorkflowId)
+        showToast(
+          currentWorkflowId 
+            ? 'Workflow updated successfully!'
+            : 'Workflow saved successfully!',
+          'success'
+        )
         setSaveModalOpen(false)
       } else {
         const errorData = await response.json()
@@ -122,6 +136,7 @@ export default function WorkflowBuilder() {
         
         importWorkflow({ nodes: data.nodes, edges: data.edges })
         setCurrentWorkflowName(data.name)
+        setCurrentWorkflowId(workflowId)
         showToast(`Workflow "${data.name}" loaded successfully!`, 'success')
         setLoadModalOpen(false)
       } else {
@@ -151,9 +166,10 @@ export default function WorkflowBuilder() {
 
       if (response.ok) {
         showToast('Workflow deleted successfully', 'success')
-        // Clear workflow name if the deleted workflow was currently loaded
+        // Clear workflow name and ID if the deleted workflow was currently loaded
         if (currentWorkflowName) {
           setCurrentWorkflowName(null)
+          setCurrentWorkflowId(null)
         }
       } else {
         const errorData = await response.json()
@@ -183,6 +199,7 @@ export default function WorkflowBuilder() {
           const workflow = await importWorkflowFromFile(file)
           importWorkflow(workflow)
           setCurrentWorkflowName(null) // Imported workflows don't have a name
+          setCurrentWorkflowId(null) // Imported workflows don't have an ID
           showToast('Workflow imported successfully!', 'success')
         } catch (error) {
           console.error('Error importing workflow:', error)
@@ -221,10 +238,36 @@ export default function WorkflowBuilder() {
       () => {
         reset()
         setCurrentWorkflowName(null)
+        setCurrentWorkflowId(null)
         showToast('Workflow cleared', 'info')
       },
       'danger'
     )
+  }
+
+  const handleNew = () => {
+    // Check if there are any nodes/edges to warn user
+    const hasContent = nodes.length > 0 || edges.length > 0
+    
+    if (hasContent) {
+      showConfirm(
+        'New Workflow',
+        'Starting a new workflow will clear the current one. Any unsaved changes will be lost. Do you want to continue?',
+        () => {
+          reset()
+          setCurrentWorkflowName(null)
+          setCurrentWorkflowId(null)
+          showToast('New workflow started', 'info')
+        },
+        'warning'
+      )
+    } else {
+      // No content, just reset
+      reset()
+      setCurrentWorkflowName(null)
+      setCurrentWorkflowId(null)
+      showToast('New workflow started', 'info')
+    }
   }
 
   return (
@@ -281,6 +324,14 @@ export default function WorkflowBuilder() {
                   <Redo2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
                 <div className="w-px h-4 md:h-6 bg-weavy-border mx-0.5 md:mx-2 flex-shrink-0" />
+                <button
+                  onClick={handleNew}
+                  className="px-2 md:px-3 py-1.5 md:py-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200 flex items-center gap-1.5 md:gap-2 flex-shrink-0"
+                  title="New workflow"
+                >
+                  <FilePlus className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">New</span>
+                </button>
                 <button
                   onClick={() => setSaveModalOpen(true)}
                   className="px-2 md:px-3 py-1.5 md:py-2 bg-weavy-bg-tertiary border border-weavy-border rounded text-weavy-text-primary hover:bg-weavy-bg-primary hover:border-weavy-accent transition-colors duration-200 flex items-center gap-1.5 md:gap-2 flex-shrink-0"
@@ -339,10 +390,13 @@ export default function WorkflowBuilder() {
 
       {/* Modals */}
       <SaveWorkflowModal
+        key={`save-modal-${currentWorkflowId || 'new'}`}
         isOpen={saveModalOpen}
         onClose={() => setSaveModalOpen(false)}
         onSave={handleSave}
         isLoading={isSaving}
+        currentWorkflowName={currentWorkflowName}
+        isUpdate={Boolean(currentWorkflowId)}
       />
       <LoadWorkflowModal
         isOpen={loadModalOpen}

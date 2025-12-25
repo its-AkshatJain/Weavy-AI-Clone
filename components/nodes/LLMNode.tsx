@@ -1,22 +1,60 @@
 'use client'
 
-import { memo, useState } from 'react'
+import { memo, useState, useMemo } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Brain, Loader2, AlertCircle, Play } from 'lucide-react'
+import { Brain, Loader2, AlertCircle, Play, Link2 } from 'lucide-react'
 import { useWorkflowStore } from '@/stores/workflow-store'
-import type { LLMNodeData } from '@/types'
+import type { LLMNodeData, TextNodeData, ImageNodeData } from '@/types'
 
 function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData)
-  const { nodes, edges } = useWorkflowStore((state) => ({ nodes: state.nodes, edges: state.edges }))
+  const nodes = useWorkflowStore((state) => state.nodes)
+  const edges = useWorkflowStore((state) => state.edges)
   const [localPrompt, setLocalPrompt] = useState(data.prompt || '')
   const [localSystemPrompt, setLocalSystemPrompt] = useState(data.systemPrompt || '')
   const [localModel, setLocalModel] = useState(data.model || 'gemini-2.5-flash-lite')
+
+  // Calculate connected inputs for display
+  const connectedInputs = useMemo(() => {
+    const incomingEdges = edges.filter((edge) => edge.target === id)
+    const upstreamNodes = nodes.filter((node) =>
+      incomingEdges.some((edge) => edge.source === node.id)
+    )
+
+    const inputs: Array<{ type: string; content: string; hasContent: boolean }> = []
+    upstreamNodes.forEach((node) => {
+      if (node.type === 'text') {
+        inputs.push({
+          type: 'text',
+          content: (node.data as any).content || '',
+          hasContent: !!(node.data as any).content,
+        })
+      } else if (node.type === 'image') {
+        inputs.push({
+          type: 'image',
+          content: (node.data as any).imageUrl || '',
+          hasContent: !!(node.data as any).imageUrl,
+        })
+      } else if (node.type === 'llm') {
+        inputs.push({
+          type: 'llm',
+          content: (node.data as any).output || '',
+          hasContent: !!(node.data as any).output,
+        })
+      }
+    })
+    return inputs
+  }, [nodes, edges, id])
 
   const handleRun = async () => {
     updateNodeData(id, { isLoading: true, error: null, output: null })
 
     try {
+      // Get the latest nodes and edges directly from the store to ensure we have the most up-to-date data
+      const currentState = useWorkflowStore.getState()
+      const nodes = currentState.nodes
+      const edges = currentState.edges
+
       // Get upstream connected nodes
       const incomingEdges = edges.filter((edge) => edge.target === id)
       const upstreamNodes = nodes.filter((node) =>
@@ -28,11 +66,24 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
       const imageInputs: string[] = []
 
       upstreamNodes.forEach((node) => {
-        if (node.type === 'text' && node.data.content) {
-          textInputs.push(node.data.content)
+        if (node.type === 'text') {
+          const textData = node.data as TextNodeData
+          if (textData.content) {
+            textInputs.push(textData.content)
+          }
         }
-        if (node.type === 'image' && node.data.imageUrl) {
-          imageInputs.push(node.data.imageUrl)
+        if (node.type === 'image') {
+          const imageData = node.data as ImageNodeData
+          if (imageData.imageUrl) {
+            imageInputs.push(imageData.imageUrl)
+          }
+        }
+        if (node.type === 'llm') {
+          // Get output from connected LLM nodes
+          const llmData = node.data as LLMNodeData
+          if (llmData.output) {
+            textInputs.push(llmData.output)
+          }
         }
       })
 
@@ -88,6 +139,7 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
         type="target"
         position={Position.Top}
         className="w-2.5 h-2.5 bg-weavy-accent border-2 border-weavy-bg-secondary rounded-full hover:bg-weavy-accent-hover hover:scale-110 transition-all"
+        title="Incoming connection - Connect FROM other nodes TO here"
       />
       <div className="flex items-center gap-2 p-3 border-b border-weavy-border bg-weavy-bg-tertiary rounded-t-lg">
         <div className="w-6 h-6 flex items-center justify-center bg-gradient-to-br from-emerald-500 to-green-600 rounded text-white">
@@ -166,6 +218,48 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
           />
         </div>
 
+        {/* Connected Inputs Indicator */}
+        {connectedInputs.length > 0 ? (
+          <div className="space-y-1.5">
+            <label className="text-xs text-weavy-text-secondary font-medium flex items-center gap-1.5">
+              <Link2 className="w-3 h-3" />
+              Connected Inputs ({connectedInputs.length}) ✓
+            </label>
+            <div className="space-y-1.5">
+              {connectedInputs.map((input, idx) => (
+                <div
+                  key={idx}
+                  className={`p-2 border rounded text-xs ${
+                    input.hasContent
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+                  }`}
+                >
+                  <div className="font-medium mb-1">
+                    {input.type === 'text' ? '📝 Text Node' : input.type === 'image' ? '🖼️ Image Node' : '🤖 LLM Node'}
+                    {input.hasContent ? ' ✓' : ' (empty)'}
+                  </div>
+                  {input.hasContent && (input.type === 'text' || input.type === 'llm') && (
+                    <div className="text-xs opacity-80 truncate max-w-full">
+                      {input.content.substring(0, 100)}
+                      {input.content.length > 100 ? '...' : ''}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            <div className="p-2 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-400 text-xs">
+              <div className="font-medium mb-1">⚠️ No inputs connected</div>
+              <div className="opacity-80 text-xs">
+                Connect a Text or Image node: Drag from the <strong>bottom</strong> (source) of another node to the <strong>top</strong> (target) of this node.
+              </div>
+            </div>
+          </div>
+        )}
+
         {data.error && (
           <div 
             className="p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs flex items-start gap-2 max-h-32 overflow-y-auto scrollbar-custom"
@@ -194,6 +288,7 @@ function LLMNode({ data, selected, id }: NodeProps<LLMNodeData>) {
         type="source"
         position={Position.Bottom}
         className="w-2.5 h-2.5 bg-weavy-accent border-2 border-weavy-bg-secondary rounded-full hover:bg-weavy-accent-hover hover:scale-110 transition-all"
+        title="Outgoing connection - Connect FROM here TO other nodes"
       />
     </div>
   )

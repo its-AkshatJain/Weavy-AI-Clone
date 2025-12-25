@@ -8,6 +8,8 @@ interface SaveWorkflowModalProps {
   onClose: () => void
   onSave: (name: string) => Promise<void>
   isLoading?: boolean
+  currentWorkflowName?: string | null
+  isUpdate?: boolean
 }
 
 export default function SaveWorkflowModal({
@@ -15,14 +17,17 @@ export default function SaveWorkflowModal({
   onClose,
   onSave,
   isLoading = false,
+  currentWorkflowName,
+  isUpdate = false,
 }: SaveWorkflowModalProps) {
   const [workflowName, setWorkflowName] = useState('')
 
   useEffect(() => {
     if (isOpen) {
-      setWorkflowName('')
+      // Pre-fill with current workflow name if updating
+      setWorkflowName(currentWorkflowName || '')
     }
-  }, [isOpen])
+  }, [isOpen, currentWorkflowName])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,7 +44,9 @@ export default function SaveWorkflowModal({
       <div className="bg-weavy-bg-secondary border border-weavy-border rounded-lg shadow-xl w-full max-w-md mx-4">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-weavy-border">
-          <h2 className="text-lg font-semibold text-weavy-text-primary">Save Workflow</h2>
+          <h2 className="text-lg font-semibold text-weavy-text-primary">
+            {isUpdate ? 'Update Workflow' : 'Save Workflow'}
+          </h2>
           <button
             onClick={onClose}
             disabled={isLoading}
@@ -83,7 +90,10 @@ export default function SaveWorkflowModal({
               disabled={!workflowName.trim() || isLoading}
               className="px-4 py-2 bg-weavy-accent hover:bg-weavy-accent-hover text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Saving...' : 'Save'}
+              {isLoading 
+                ? (isUpdate ? 'Updating...' : 'Saving...')
+                : (isUpdate ? 'Update' : 'Save')
+              }
             </button>
           </div>
         </form>

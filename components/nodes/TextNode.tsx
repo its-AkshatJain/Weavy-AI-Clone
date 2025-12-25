@@ -25,6 +25,7 @@ function TextNode({ data, selected, id }: NodeProps<TextNodeData>) {
         type="target"
         position={Position.Top}
         className="w-2.5 h-2.5 bg-weavy-accent border-2 border-weavy-bg-secondary rounded-full hover:bg-weavy-accent-hover hover:scale-110 transition-all"
+        title="Incoming connection - Connect FROM other nodes TO here"
       />
       <div className="flex items-center gap-2 p-3 border-b border-weavy-border bg-weavy-bg-tertiary rounded-t-lg">
         <div className="w-6 h-6 flex items-center justify-center bg-gradient-to-br from-weavy-accent to-purple-600 rounded text-white font-bold text-xs">
@@ -50,6 +51,7 @@ function TextNode({ data, selected, id }: NodeProps<TextNodeData>) {
         type="source"
         position={Position.Bottom}
         className="w-2.5 h-2.5 bg-weavy-accent border-2 border-weavy-bg-secondary rounded-full hover:bg-weavy-accent-hover hover:scale-110 transition-all"
+        title="Outgoing connection - Drag FROM here TO connect to other nodes"
       />
     </div>
   )

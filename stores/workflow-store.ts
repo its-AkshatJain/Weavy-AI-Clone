@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange } from 'reactflow'
 
 export interface WorkflowState {
@@ -40,13 +41,15 @@ const initialState: WorkflowState = {
   },
 }
 
-export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
-  ...initialState,
+export const useWorkflowStore = create<WorkflowStore>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-  setNodes: (nodes) => {
-    set({ nodes })
-    get().saveToHistory()
-  },
+      setNodes: (nodes) => {
+        set({ nodes })
+        get().saveToHistory()
+      },
 
   setEdges: (edges) => {
     set({ edges })
@@ -191,5 +194,15 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     set({ nodes: workflow.nodes, edges: workflow.edges })
     get().saveToHistory()
   },
-}))
+    }),
+    {
+      name: 'weavy-workflow-storage',
+      // Only persist nodes and edges, not history (to save space)
+      partialize: (state) => ({
+        nodes: state.nodes,
+        edges: state.edges,
+      }),
+    }
+  )
+)
 
