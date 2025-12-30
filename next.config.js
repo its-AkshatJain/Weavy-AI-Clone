@@ -6,12 +6,11 @@ const nextConfig = {
   },
   // Optimize images for Vercel
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [],
   },
   // Output configuration for Vercel
-  output: 'standalone',
-}
+  output: "standalone",
+};
 
-module.exports = nextConfig
-
+module.exports = nextConfig;
